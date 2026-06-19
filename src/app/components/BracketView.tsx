@@ -6,6 +6,7 @@ import { GitCommit, Edit3, Calendar, Clock, MapPin, Award, Check, X, ShieldAlert
 interface Team {
   id: string;
   name: string;
+  groupName?: string;
 }
 
 interface Match {

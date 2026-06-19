@@ -6,6 +6,7 @@ import { Settings, Users, ChevronRight, Play, RotateCcw, Plus, Trash2 } from 'lu
 interface Team {
   id: string;
   name: string;
+  groupName?: string;
 }
 
 interface SportConfigPanelProps {
@@ -26,11 +27,19 @@ interface SportConfigPanelProps {
 const TeamInputItem = React.memo(({ 
   index, 
   initialName, 
-  onNameChange 
+  initialGroupName,
+  groupCount,
+  format,
+  onNameChange,
+  onGroupChange
 }: { 
   index: number; 
   initialName: string; 
+  initialGroupName?: string;
+  groupCount: number;
+  format: 'grup' | 'gugur' | 'grup_gugur';
   onNameChange: (index: number, name: string) => void; 
+  onGroupChange: (index: number, groupName: string) => void;
 }) => {
   const [localName, setLocalName] = useState(initialName);
 
@@ -43,16 +52,40 @@ const TeamInputItem = React.memo(({
     onNameChange(index, val);
   };
 
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const showGroupSelect = format === 'grup' || format === 'grup_gugur';
+  
+  // Default to A, B, etc. using index modulo if not set
+  const currentGroup = initialGroupName || (alphabet[index % groupCount] || `Grup ${(index % groupCount) + 1}`);
+
   return (
-    <div className="flex items-center gap-2 bg-zinc-900/40 rounded-xl p-2 border border-zinc-850 hover:border-zinc-800 transition-all">
-      <span className="text-xs font-bold text-zinc-500 w-6 text-center">{index + 1}</span>
-      <input
-        type="text"
-        className="w-full bg-transparent border-none outline-none text-sm text-zinc-100 placeholder-zinc-600 focus:ring-0 py-1"
-        placeholder={`Nama Tim ${index + 1}`}
-        value={localName}
-        onChange={(e) => handleChange(e.target.value)}
-      />
+    <div className="flex items-center gap-2 bg-zinc-900/40 rounded-xl p-2 border border-zinc-850 hover:border-zinc-800 transition-all justify-between">
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <span className="text-xs font-bold text-zinc-500 w-5 text-center flex-shrink-0">{index + 1}</span>
+        <input
+          type="text"
+          className="w-full bg-transparent border-none outline-none text-sm text-zinc-100 placeholder-zinc-600 focus:ring-0 py-1"
+          placeholder={`Nama Tim ${index + 1}`}
+          value={localName}
+          onChange={(e) => handleChange(e.target.value)}
+        />
+      </div>
+      {showGroupSelect && (
+        <select
+          value={currentGroup}
+          onChange={(e) => onGroupChange(index, e.target.value)}
+          className="bg-zinc-900 border border-zinc-850 rounded px-1.5 py-0.5 text-[10px] text-zinc-300 font-bold focus:outline-none focus:border-violet-500 cursor-pointer flex-shrink-0"
+        >
+          {Array.from({ length: groupCount }).map((_, gIdx) => {
+            const gName = alphabet[gIdx] || `Grup ${gIdx + 1}`;
+            return (
+              <option key={gName} value={gName} className="bg-zinc-900 text-zinc-300">
+                Grup {gName}
+              </option>
+            );
+          })}
+        </select>
+      )}
     </div>
   );
 });
@@ -136,6 +169,29 @@ export default function SportConfigPanel({
     setGroupCount(parsed);
   };
 
+  // Automatically clamp and adjust team groupName if groupCount decreases
+  useEffect(() => {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const maxGroupIdx = groupCount - 1;
+    setTeams(prevTeams => {
+      let changed = false;
+      const updated = prevTeams.map((t, idx) => {
+        const defaultGroup = alphabet[idx % groupCount] || `Grup ${(idx % groupCount) + 1}`;
+        const currentGroup = t.groupName || defaultGroup;
+        const currentIdx = alphabet.indexOf(currentGroup);
+        if (currentIdx > maxGroupIdx || currentIdx === -1) {
+          changed = true;
+          return {
+            ...t,
+            groupName: alphabet[idx % groupCount] || `Grup ${(idx % groupCount) + 1}`
+          };
+        }
+        return t;
+      });
+      return changed ? updated : prevTeams;
+    });
+  }, [groupCount]);
+
   const handleTeamNameChange = useCallback((index: number, name: string) => {
     setTeams(prevTeams => {
       const newTeams = [...prevTeams];
@@ -144,14 +200,24 @@ export default function SportConfigPanel({
     });
   }, []);
 
+  const handleTeamGroupChange = useCallback((index: number, groupName: string) => {
+    setTeams(prevTeams => {
+      const newTeams = [...prevTeams];
+      newTeams[index] = { ...newTeams[index], groupName };
+      return newTeams;
+    });
+  }, []);
+
   const handleGenerate = () => {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     onGenerate({
       format,
       teamCount,
       groupCount,
       teams: teams.map((t, idx) => ({
         id: t.id || `team-${idx}`,
-        name: t.name.trim() || `TIM ${idx + 1}`
+        name: t.name.trim() || `TIM ${idx + 1}`,
+        groupName: t.groupName || (alphabet[idx % groupCount] || `Grup ${(idx % groupCount) + 1}`)
       }))
     });
   };
@@ -288,13 +354,17 @@ export default function SportConfigPanel({
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-96 overflow-y-auto pr-1 no-scrollbar">
           {Array.from({ length: teamCount }).map((_, idx) => {
-            const team = teams[idx] || { id: `team-temp-${idx}`, name: '' };
+            const team = teams[idx] || { id: `team-temp-${idx}`, name: '', groupName: undefined };
             return (
               <TeamInputItem
                 key={team.id || `team-input-${idx}`}
                 index={idx}
                 initialName={team.name}
+                initialGroupName={team.groupName}
+                groupCount={groupCount}
+                format={format}
                 onNameChange={handleTeamNameChange}
+                onGroupChange={handleTeamGroupChange}
               />
             );
           })}

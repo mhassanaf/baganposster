@@ -6,6 +6,7 @@ import { Calendar, Clock, MapPin, Edit2, Check, X, ShieldAlert, Award } from 'lu
 interface Team {
   id: string;
   name: string;
+  groupName?: string;
 }
 
 interface Match {

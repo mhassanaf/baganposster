@@ -18,6 +18,7 @@ import { getSupabaseClient, saveStateToSupabase, fetchStateFromSupabase, DEFAULT
 interface Team {
   id: string;
   name: string;
+  groupName?: string;
 }
 
 interface Match {
@@ -201,7 +202,7 @@ export default function SportsDashboard() {
     const matches: Match[] = [];
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-    // Distribute teams to groups by index % groupCount
+    // Distribute teams to groups by manual groupName or fallback index % groupCount
     const groups: Record<string, Team[]> = {};
     for (let g = 0; g < groupCount; g++) {
       const gName = alphabet[g] || `Grup ${g + 1}`;
@@ -209,8 +210,18 @@ export default function SportsDashboard() {
     }
 
     teams.forEach((t, idx) => {
-      const gName = alphabet[idx % groupCount] || `Grup ${(idx % groupCount) + 1}`;
-      groups[gName].push(t);
+      const defaultGroup = alphabet[idx % groupCount] || `Grup ${(idx % groupCount) + 1}`;
+      const gName = t.groupName || defaultGroup;
+      if (groups[gName]) {
+        groups[gName].push(t);
+      } else {
+        const fallbackGroup = alphabet[0] || 'A';
+        if (groups[fallbackGroup]) {
+          groups[fallbackGroup].push(t);
+        } else {
+          groups[gName] = [t];
+        }
+      }
     });
 
     // Generate rounds for each group
@@ -525,7 +536,11 @@ export default function SportsDashboard() {
     // Compute standings for each group
     for (let g = 0; g < currentSportState.groupCount; g++) {
       const gName = alphabet[g] || `Grup ${g + 1}`;
-      const groupTeams = currentSportState.teams.filter((_, idx) => idx % currentSportState.groupCount === g);
+      const groupTeams = currentSportState.teams.filter((t, idx) => {
+        const defaultGroup = alphabet[idx % currentSportState.groupCount] || `Grup ${(idx % currentSportState.groupCount) + 1}`;
+        const actualGroup = t.groupName || defaultGroup;
+        return actualGroup === gName;
+      });
       
       // Standings calculation simulation
       const groupMatches = currentSportState.matches.filter(
@@ -655,7 +670,11 @@ export default function SportsDashboard() {
         csv += headers;
 
         // Calculate Standings
-        const groupTeams = currentSportState.teams.filter((_, idx) => idx % currentSportState.groupCount === g);
+        const groupTeams = currentSportState.teams.filter((t, idx) => {
+          const defaultGroup = alphabet[idx % currentSportState.groupCount] || `Grup ${(idx % currentSportState.groupCount) + 1}`;
+          const actualGroup = t.groupName || defaultGroup;
+          return actualGroup === groupName;
+        });
         const groupMatches = currentSportState.matches.filter(m => m.stage === 'group' && m.groupName === groupName);
         
         const stats = groupTeams.map(t => {

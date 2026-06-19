@@ -6,6 +6,7 @@ import { Trophy, Award, BarChart2 } from 'lucide-react';
 interface Team {
   id: string;
   name: string;
+  groupName?: string;
 }
 
 interface Match {
@@ -62,7 +63,13 @@ export default function StandingsTable({
   // Helper to partition teams into groups
   // We can assign teams to groups based on index: team index % groupCount
   const getGroupTeams = (groupIndex: number) => {
-    return teams.filter((_, idx) => idx % groupCount === groupIndex);
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const targetGroup = alphabet[groupIndex] || `Grup ${groupIndex + 1}`;
+    return teams.filter((t, idx) => {
+      const defaultGroup = alphabet[idx % groupCount] || `Grup ${(idx % groupCount) + 1}`;
+      const actualGroup = t.groupName || defaultGroup;
+      return actualGroup === targetGroup;
+    });
   };
 
   const calculateGroupStandings = (groupName: string, groupTeams: Team[]) => {
