@@ -26,20 +26,14 @@ interface SportConfigPanelProps {
 
 const TeamInputItem = React.memo(({ 
   index, 
+  label,
   initialName, 
-  initialGroupName,
-  groupCount,
-  format,
-  onNameChange,
-  onGroupChange
+  onNameChange 
 }: { 
   index: number; 
+  label?: string | number;
   initialName: string; 
-  initialGroupName?: string;
-  groupCount: number;
-  format: 'grup' | 'gugur' | 'grup_gugur';
   onNameChange: (index: number, name: string) => void; 
-  onGroupChange: (index: number, groupName: string) => void;
 }) => {
   const [localName, setLocalName] = useState(initialName);
 
@@ -52,40 +46,16 @@ const TeamInputItem = React.memo(({
     onNameChange(index, val);
   };
 
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const showGroupSelect = format === 'grup' || format === 'grup_gugur';
-  
-  // Default to A, B, etc. using index modulo if not set
-  const currentGroup = initialGroupName || (alphabet[index % groupCount] || `Grup ${(index % groupCount) + 1}`);
-
   return (
-    <div className="flex items-center gap-2 bg-zinc-900/40 rounded-xl p-2 border border-zinc-850 hover:border-zinc-800 transition-all justify-between">
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        <span className="text-xs font-bold text-zinc-500 w-5 text-center flex-shrink-0">{index + 1}</span>
-        <input
-          type="text"
-          className="w-full bg-transparent border-none outline-none text-sm text-zinc-100 placeholder-zinc-600 focus:ring-0 py-1"
-          placeholder={`Nama Tim ${index + 1}`}
-          value={localName}
-          onChange={(e) => handleChange(e.target.value)}
-        />
-      </div>
-      {showGroupSelect && (
-        <select
-          value={currentGroup}
-          onChange={(e) => onGroupChange(index, e.target.value)}
-          className="bg-zinc-900 border border-zinc-850 rounded px-1.5 py-0.5 text-[10px] text-zinc-300 font-bold focus:outline-none focus:border-violet-500 cursor-pointer flex-shrink-0"
-        >
-          {Array.from({ length: groupCount }).map((_, gIdx) => {
-            const gName = alphabet[gIdx] || `Grup ${gIdx + 1}`;
-            return (
-              <option key={gName} value={gName} className="bg-zinc-900 text-zinc-300">
-                Grup {gName}
-              </option>
-            );
-          })}
-        </select>
-      )}
+    <div className="flex items-center gap-2 bg-zinc-900/40 rounded-xl p-2 border border-zinc-850 hover:border-zinc-800 transition-all duration-300 hover:scale-[1.02] hover:bg-zinc-900/60">
+      <span className="text-xs font-bold text-zinc-500 w-6 text-center">{label !== undefined ? label : index + 1}</span>
+      <input
+        type="text"
+        className="w-full bg-transparent border-none outline-none text-sm text-zinc-100 placeholder-zinc-600 focus:ring-0 py-1"
+        placeholder={`Nama Tim ${index + 1}`}
+        value={localName}
+        onChange={(e) => handleChange(e.target.value)}
+      />
     </div>
   );
 });
@@ -169,41 +139,10 @@ export default function SportConfigPanel({
     setGroupCount(parsed);
   };
 
-  // Automatically clamp and adjust team groupName if groupCount decreases
-  useEffect(() => {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const maxGroupIdx = groupCount - 1;
-    setTeams(prevTeams => {
-      let changed = false;
-      const updated = prevTeams.map((t, idx) => {
-        const defaultGroup = alphabet[idx % groupCount] || `Grup ${(idx % groupCount) + 1}`;
-        const currentGroup = t.groupName || defaultGroup;
-        const currentIdx = alphabet.indexOf(currentGroup);
-        if (currentIdx > maxGroupIdx || currentIdx === -1) {
-          changed = true;
-          return {
-            ...t,
-            groupName: alphabet[idx % groupCount] || `Grup ${(idx % groupCount) + 1}`
-          };
-        }
-        return t;
-      });
-      return changed ? updated : prevTeams;
-    });
-  }, [groupCount]);
-
   const handleTeamNameChange = useCallback((index: number, name: string) => {
     setTeams(prevTeams => {
       const newTeams = [...prevTeams];
       newTeams[index] = { ...newTeams[index], name };
-      return newTeams;
-    });
-  }, []);
-
-  const handleTeamGroupChange = useCallback((index: number, groupName: string) => {
-    setTeams(prevTeams => {
-      const newTeams = [...prevTeams];
-      newTeams[index] = { ...newTeams[index], groupName };
       return newTeams;
     });
   }, []);
@@ -217,7 +156,7 @@ export default function SportConfigPanel({
       teams: teams.map((t, idx) => ({
         id: t.id || `team-${idx}`,
         name: t.name.trim() || `TIM ${idx + 1}`,
-        groupName: t.groupName || (alphabet[idx % groupCount] || `Grup ${(idx % groupCount) + 1}`)
+        groupName: alphabet[idx % groupCount] || `Grup ${(idx % groupCount) + 1}`
       }))
     });
   };
@@ -347,28 +286,71 @@ export default function SportConfigPanel({
       </div>
 
       {/* CRUD Nama-Nama Tim */}
-      <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3 flex items-center gap-1.5">
+      <div className="transition-all duration-500 ease-in-out">
+        <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-1.5">
           <Users className="w-4 h-4 text-violet-400" /> Input & Edit Nama Tim Peserta
         </label>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-96 overflow-y-auto pr-1 no-scrollbar">
-          {Array.from({ length: teamCount }).map((_, idx) => {
-            const team = teams[idx] || { id: `team-temp-${idx}`, name: '', groupName: undefined };
-            return (
-              <TeamInputItem
-                key={team.id || `team-input-${idx}`}
-                index={idx}
-                initialName={team.name}
-                initialGroupName={team.groupName}
-                groupCount={groupCount}
-                format={format}
-                onNameChange={handleTeamNameChange}
-                onGroupChange={handleTeamGroupChange}
-              />
-            );
-          })}
-        </div>
+        {(format === 'grup' || format === 'grup_gugur') ? (
+          <div className="space-y-5 animate-fade-in transition-all duration-500">
+            {Array.from({ length: groupCount }).map((_, gIdx) => {
+              const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+              const gName = alphabet[gIdx] || `Grup ${gIdx + 1}`;
+              
+              // Filter team indices that belong to this group (idx % groupCount === gIdx)
+              const groupTeamIndices: number[] = [];
+              for (let i = 0; i < teamCount; i++) {
+                if (i % groupCount === gIdx) {
+                  groupTeamIndices.push(i);
+                }
+              }
+
+              if (groupTeamIndices.length === 0) return null;
+
+              return (
+                <div 
+                  key={gName} 
+                  className="bg-zinc-900/20 border border-zinc-850 rounded-2xl p-4 transition-all duration-500 hover:border-zinc-800 hover:shadow-xl hover:shadow-zinc-950/10"
+                >
+                  <div className="flex items-center justify-between mb-3 border-b border-zinc-800 pb-2">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400 bg-violet-950/20 px-2.5 py-1 rounded-lg border border-violet-900/20">
+                      Grup {gName}
+                    </span>
+                    <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">{groupTeamIndices.length} Tim</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {groupTeamIndices.map((idx, gTeamIdx) => {
+                      const team = teams[idx] || { id: `team-temp-${idx}`, name: '' };
+                      return (
+                        <TeamInputItem
+                          key={team.id || `team-input-${idx}`}
+                          index={idx}
+                          label={gTeamIdx + 1}
+                          initialName={team.name}
+                          onNameChange={handleTeamNameChange}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-96 overflow-y-auto pr-1 no-scrollbar animate-fade-in transition-all duration-500">
+            {Array.from({ length: teamCount }).map((_, idx) => {
+              const team = teams[idx] || { id: `team-temp-${idx}`, name: '' };
+              return (
+                <TeamInputItem
+                  key={team.id || `team-input-${idx}`}
+                  index={idx}
+                  initialName={team.name}
+                  onNameChange={handleTeamNameChange}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
