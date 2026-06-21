@@ -376,34 +376,63 @@ export default function SportsDashboard() {
     const firstRoundMatchesCount = power / 2;
     const firstRoundPairs: { teamA: Team | null; teamB: Team | null }[] = [];
 
-    // Match teams sequentially (1-akhir) with BYEs distributed symmetrically at the top and bottom.
-    // byeTop matches at the top will be: Real Team vs BYE
-    // byeBottom matches at the bottom will be: Real Team vs BYE
-    // The remaining matches in the middle will be: Real Team vs Real Team
-    const byeCount = power - n;
-    const byeTop = Math.ceil(byeCount / 2);
-    const byeBottom = Math.floor(byeCount / 2);
-    let teamIndex = 0;
+    // Generate standard seed order for the given power of 2
+    let seedOrder = [1];
+    while (seedOrder.length < power) {
+      const nextOrder: number[] = [];
+      const len = seedOrder.length;
+      const target = len * 2 + 1;
+      for (let i = 0; i < len; i++) {
+        if (i % 2 === 0) {
+          nextOrder.push(seedOrder[i]);
+          nextOrder.push(target - seedOrder[i]);
+        } else {
+          nextOrder.push(target - seedOrder[i]);
+          nextOrder.push(seedOrder[i]);
+        }
+      }
+      seedOrder = nextOrder;
+    }
 
+    // Identify which seeds are BYEs.
+    // The top `byeCount` seeds get BYEs.
+    const byeCount = power - n;
+
+    // We place the teams sequentially into the non-BYE seed slots.
+    const slots: (Team | null)[] = Array(power).fill(null);
+
+    // Find all slot indices that are filled (where the seed > byeCount)
+    const filledSlotIndices: number[] = [];
+    for (let idx = 0; idx < power; idx++) {
+      const seed = seedOrder[idx];
+      if (seed > byeCount) {
+        filledSlotIndices.push(idx);
+      }
+    }
+
+    // Populate the slots sequentially with teams
+    let teamIdx = 0;
+    filledSlotIndices.forEach((slotIdx) => {
+      if (teams[teamIdx]) {
+        slots[slotIdx] = teams[teamIdx];
+        teamIdx++;
+      }
+    });
+
+    // Group the slots into pairs for the first round matches.
+    // If one of the slots in a pair is null (BYE), we ensure the real team is always teamA, and teamB is null.
     for (let m = 0; m < firstRoundMatchesCount; m++) {
-      if (m < byeTop) {
-        // Top BYEs
-        const teamA = teams[teamIndex] || null;
-        const teamB = null;
-        firstRoundPairs.push({ teamA, teamB });
-        teamIndex += 1;
-      } else if (m < firstRoundMatchesCount - byeBottom) {
-        // Middle Real matches
-        const teamA = teams[teamIndex] || null;
-        const teamB = teams[teamIndex + 1] || null;
-        firstRoundPairs.push({ teamA, teamB });
-        teamIndex += 2;
+      const slotA = slots[2 * m];
+      const slotB = slots[2 * m + 1];
+
+      if (slotA && slotB) {
+        firstRoundPairs.push({ teamA: slotA, teamB: slotB });
+      } else if (slotA && !slotB) {
+        firstRoundPairs.push({ teamA: slotA, teamB: null });
+      } else if (!slotA && slotB) {
+        firstRoundPairs.push({ teamA: slotB, teamB: null });
       } else {
-        // Bottom BYEs
-        const teamA = teams[teamIndex] || null;
-        const teamB = null;
-        firstRoundPairs.push({ teamA, teamB });
-        teamIndex += 1;
+        firstRoundPairs.push({ teamA: null, teamB: null });
       }
     }
 

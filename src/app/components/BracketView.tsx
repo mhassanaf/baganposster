@@ -229,6 +229,50 @@ export default function BracketView({
                     const isWinnerA = m.winnerId === m.teamAId && (hasScore || m.isWO);
                     const isWinnerB = m.winnerId === m.teamBId && (hasScore || m.isWO);
 
+                    const isByeMatch = m.roundIndex === 0 && ((m.teamAId && !m.teamBId) || (!m.teamAId && m.teamBId));
+                    const realTeamId = m.teamAId || m.teamBId;
+
+                    if (isByeMatch) {
+                      return (
+                        <div
+                          key={m.id}
+                          className="glass-card rounded-xl p-3 border border-zinc-850/60 opacity-80 flex flex-col justify-between gap-2.5 relative"
+                        >
+                          {/* Match details label */}
+                          <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold uppercase">
+                            <span>Pertandingan {m.matchIndex !== undefined ? m.matchIndex + 1 : ''}</span>
+                            <span className="text-violet-400/60 font-extrabold tracking-wider text-[9px] bg-violet-950/20 px-1.5 py-0.5 rounded border border-violet-900/30">
+                              BYE (Lolos)
+                            </span>
+                          </div>
+
+                          {/* Team Row */}
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 truncate flex-1">
+                              <span className="text-xs font-semibold truncate text-violet-400 font-extrabold">
+                                {getTeamName(realTeamId, m)}
+                              </span>
+                            </div>
+                            <span className="font-mono text-xs font-extrabold px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-850 min-w-[20px] text-center text-violet-400 bg-violet-950/20">
+                              W
+                            </span>
+                          </div>
+
+                          {/* Empty / BYE Row */}
+                          <div className="flex items-center justify-between gap-2 opacity-40">
+                            <div className="flex items-center gap-1.5 truncate flex-1">
+                              <span className="text-xs font-semibold truncate text-zinc-500 italic">
+                                Istirahat / Kosong
+                              </span>
+                            </div>
+                            <span className="font-mono text-xs font-extrabold px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-850 min-w-[20px] text-center text-zinc-500">
+                              -
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     return (
                       <div
                         key={m.id}
