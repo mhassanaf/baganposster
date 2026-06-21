@@ -31,13 +31,15 @@ interface MatchListProps {
   teams: Team[];
   matches: Match[];
   onUpdateMatch: (updatedMatch: Match) => void;
+  isAdmin?: boolean;
 }
 
 export default function MatchList({
   sport,
   teams,
   matches,
-  onUpdateMatch
+  onUpdateMatch,
+  isAdmin = false
 }: MatchListProps) {
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   
@@ -442,7 +444,7 @@ export default function MatchList({
                         </button>
                       </div>
                     </div>
-                  ) : (
+                   ) : isAdmin ? (
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => handleStartEdit(m)}
@@ -462,7 +464,7 @@ export default function MatchList({
                         </button>
                       )}
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             );

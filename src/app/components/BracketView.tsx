@@ -31,13 +31,15 @@ interface BracketViewProps {
   teams: Team[];
   matches: Match[];
   onUpdateMatch: (updatedMatch: Match) => void;
+  isAdmin?: boolean;
 }
 
 export default function BracketView({
   sport,
   teams,
   matches,
-  onUpdateMatch
+  onUpdateMatch,
+  isAdmin = false
 }: BracketViewProps) {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   
@@ -230,13 +232,17 @@ export default function BracketView({
                     return (
                       <div
                         key={m.id}
-                        onClick={() => openEditModal(m)}
-                        className="glass-card rounded-xl p-3 border border-zinc-850 hover:border-violet-500/50 cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between gap-2.5 relative group"
+                        onClick={() => isAdmin && openEditModal(m)}
+                        className={`glass-card rounded-xl p-3 border border-zinc-850 transition-all flex flex-col justify-between gap-2.5 relative group ${
+                          isAdmin ? 'hover:border-violet-500/50 cursor-pointer hover:scale-[1.02]' : ''
+                        }`}
                       >
                         {/* Hover Edit Overlay indicator */}
-                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Edit3 className="w-3.5 h-3.5 text-violet-400" />
-                        </div>
+                        {isAdmin && (
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Edit3 className="w-3.5 h-3.5 text-violet-400" />
+                          </div>
+                        )}
 
                         {/* Match details label */}
                         <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold uppercase">
@@ -304,12 +310,16 @@ export default function BracketView({
 
                 return (
                   <div
-                    onClick={() => openEditModal(m)}
-                    className="glass-card rounded-xl p-3 border border-zinc-850 hover:border-violet-500/50 cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between gap-2 relative group"
+                    onClick={() => isAdmin && openEditModal(m)}
+                    className={`glass-card rounded-xl p-3 border border-zinc-850 transition-all flex flex-col justify-between gap-2 relative group ${
+                      isAdmin ? 'hover:border-violet-500/50 cursor-pointer hover:scale-[1.02]' : ''
+                    }`}
                   >
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Edit3 className="w-3.5 h-3.5 text-violet-400" />
-                    </div>
+                    {isAdmin && (
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Edit3 className="w-3.5 h-3.5 text-violet-400" />
+                      </div>
+                    )}
 
                     <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold uppercase">
                       <span>Perebutan Tempat Ketiga</span>
