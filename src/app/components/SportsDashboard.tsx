@@ -373,30 +373,27 @@ export default function SportsDashboard() {
       power *= 2;
     }
 
-    // Standard recursive tournament seeding generator (e.g. for P=8: [1, 8, 4, 5, 2, 7, 3, 6])
-    let seeds: number[] = [1, 2];
-    while (seeds.length < power) {
-      const nextSeeds: number[] = [];
-      const target = seeds.length * 2 + 1;
-      for (let i = 0; i < seeds.length; i++) {
-        nextSeeds.push(seeds[i]);
-        nextSeeds.push(target - seeds[i]);
-      }
-      seeds = nextSeeds;
-    }
-
     const firstRoundMatchesCount = power / 2;
     const firstRoundPairs: { teamA: Team | null; teamB: Team | null }[] = [];
 
+    // Match teams sequentially (1 vs 2, 3 vs 4, etc.)
+    // Matches with index < realVsRealCount play against other real teams.
+    // The remaining matches play against BYE (null).
+    const realVsRealCount = n - firstRoundMatchesCount;
+    let teamIndex = 0;
+
     for (let m = 0; m < firstRoundMatchesCount; m++) {
-      const seedA = seeds[m * 2];
-      const seedB = seeds[m * 2 + 1];
-
-      // Seed values are 1-indexed. If seed <= n, it points to a real team. Otherwise, it is a BYE (null).
-      const teamA = seedA <= n ? teams[seedA - 1] : null;
-      const teamB = seedB <= n ? teams[seedB - 1] : null;
-
-      firstRoundPairs.push({ teamA, teamB });
+      if (m < realVsRealCount) {
+        const teamA = teams[teamIndex] || null;
+        const teamB = teams[teamIndex + 1] || null;
+        firstRoundPairs.push({ teamA, teamB });
+        teamIndex += 2;
+      } else {
+        const teamA = teams[teamIndex] || null;
+        const teamB = null;
+        firstRoundPairs.push({ teamA, teamB });
+        teamIndex += 1;
+      }
     }
 
     // Number of rounds
