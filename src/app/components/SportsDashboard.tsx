@@ -12,7 +12,6 @@ import SportConfigPanel from './SportConfigPanel';
 import StandingsTable from './StandingsTable';
 import MatchList from './MatchList';
 import BracketView from './BracketView';
-import SupabaseSyncPanel from './SupabaseSyncPanel';
 import { getSupabaseClient, saveStateToSupabase, fetchStateFromSupabase, DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY } from '../lib/supabase';
 
 interface Team {
@@ -75,7 +74,7 @@ export default function SportsDashboard() {
   const [activeTab, setActiveTab] = useState<string>('futsal');
   const [activeGender, setActiveGender] = useState<'putra' | 'putri'>('putra');
   const [showConfig, setShowConfig] = useState<boolean>(true);
-  const [activeView, setActiveView] = useState<'info' | 'klasemen' | 'jadwal' | 'bagan' | 'database'>('info');
+  const [activeView, setActiveView] = useState<'info' | 'klasemen' | 'jadwal' | 'bagan'>('info');
   const [advancingCount, setAdvancingCount] = useState<number>(2);
 
   // Authentication State
@@ -1074,18 +1073,7 @@ export default function SportsDashboard() {
     }
   };
 
-  const handleConfigChange = (newConfig: { url: string; anonKey: string; enabled: boolean }) => {
-    const updatedState = {
-      ...state,
-      supabaseConfig: newConfig
-    };
-    updateState(updatedState);
-  };
 
-  const handlePullState = (cloudState: any) => {
-    setState(cloudState);
-    localStorage.setItem('posster_tournament_state', JSON.stringify(cloudState));
-  };
 
   if (isLoading) {
     return (
@@ -1284,19 +1272,6 @@ export default function SportsDashboard() {
 
         {/* Bottom of Sidebar: Login/Logout & Database button */}
         <div className="pt-4 border-t border-zinc-900/80 space-y-2">
-          {isLoggedIn && (
-            <button
-              onClick={() => setActiveView('database')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all select-none cursor-pointer ${
-                activeView === 'database'
-                  ? 'bg-violet-600/15 border border-violet-500/35 text-white'
-                  : 'bg-transparent border border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/20'
-              }`}
-            >
-              <Database className="w-4 h-4 text-violet-400" />
-              <span>Database Sync</span>
-            </button>
-          )}
 
           <button
             onClick={() => isLoggedIn ? handleLogout() : setIsLoginModalOpen(true)}
@@ -1406,16 +1381,7 @@ export default function SportsDashboard() {
         </header>
 
         {/* Views content switcher */}
-        {activeView === 'database' && isLoggedIn ? (
-          <SupabaseSyncPanel
-            url={state.supabaseConfig.url}
-            anonKey={state.supabaseConfig.anonKey}
-            enabled={state.supabaseConfig.enabled}
-            onConfigChange={handleConfigChange}
-            onPullState={handlePullState}
-            getCurrentState={() => state}
-          />
-        ) : !currentSportState ? (
+        {!currentSportState ? (
           isLoggedIn ? (
             <SportConfigPanel
               onGenerate={handleGenerateTournament}
