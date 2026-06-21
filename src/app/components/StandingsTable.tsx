@@ -128,7 +128,7 @@ export default function StandingsTable({
             statsA.sw += 2;
             statsB.sl += 2;
           } else if (sportLower.includes('basket')) {
-            statsA.poin += 3;
+            statsA.poin += 2;
             statsA.sc += 20;
             statsB.sk += 20;
           } else if (sportLower.includes('gateball')) {
@@ -149,7 +149,7 @@ export default function StandingsTable({
             statsB.sw += 2;
             statsA.sl += 2;
           } else if (sportLower.includes('basket')) {
-            statsB.poin += 3;
+            statsB.poin += 2;
             statsB.sc += 20;
             statsA.sk += 20;
           } else if (sportLower.includes('gateball')) {
@@ -204,11 +204,13 @@ export default function StandingsTable({
           if (scoreA > scoreB) {
             statsA.w += 1;
             statsB.l += 1;
-            statsA.poin += 3;
+            statsA.poin += 2;
+            statsB.poin += 1;
           } else if (scoreB > scoreA) {
             statsB.w += 1;
             statsA.l += 1;
-            statsB.poin += 3;
+            statsB.poin += 2;
+            statsA.poin += 1;
           } else {
             // Draw (if any)
             statsA.d += 1;
@@ -349,7 +351,7 @@ export default function StandingsTable({
                       <th className="py-1 px-1.5 whitespace-nowrap">Nama Tim</th>
                       <th className="py-1 px-1.5 text-center w-8 whitespace-nowrap">M</th>
                       <th className="py-1 px-1.5 text-center w-8 whitespace-nowrap">W</th>
-                      {!(sportLower.includes('voly') || sportLower.includes('tenis') || sportLower.includes('catur')) && (
+                      {!(sportLower.includes('voly') || sportLower.includes('tenis') || sportLower.includes('catur') || sportLower.includes('basket')) && (
                         <th className="py-1 px-1.5 text-center w-8 whitespace-nowrap">D</th>
                       )}
                       <th className="py-1 px-1.5 text-center w-8 whitespace-nowrap">L</th>
@@ -407,7 +409,7 @@ export default function StandingsTable({
                         </td>
                         <td className="py-1 px-1.5 text-center font-mono text-zinc-300">{row.main}</td>
                         <td className="py-1 px-1.5 text-center font-mono text-emerald-400">{row.w}</td>
-                        {!(sportLower.includes('voly') || sportLower.includes('tenis') || sportLower.includes('catur')) && (
+                        {!(sportLower.includes('voly') || sportLower.includes('tenis') || sportLower.includes('catur') || sportLower.includes('basket')) && (
                           <td className="py-1 px-1.5 text-center font-mono text-zinc-400">{row.d}</td>
                         )}
                         <td className="py-1 px-1.5 text-center font-mono text-rose-400">{row.l}</td>
