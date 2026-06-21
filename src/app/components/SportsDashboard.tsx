@@ -376,19 +376,30 @@ export default function SportsDashboard() {
     const firstRoundMatchesCount = power / 2;
     const firstRoundPairs: { teamA: Team | null; teamB: Team | null }[] = [];
 
-    // Match teams sequentially (1 vs 2, 3 vs 4, etc.)
-    // Matches with index < realVsRealCount play against other real teams.
-    // The remaining matches play against BYE (null).
-    const realVsRealCount = n - firstRoundMatchesCount;
+    // Match teams sequentially (1-akhir) with BYEs distributed symmetrically at the top and bottom.
+    // byeTop matches at the top will be: Real Team vs BYE
+    // byeBottom matches at the bottom will be: Real Team vs BYE
+    // The remaining matches in the middle will be: Real Team vs Real Team
+    const byeCount = power - n;
+    const byeTop = Math.ceil(byeCount / 2);
+    const byeBottom = Math.floor(byeCount / 2);
     let teamIndex = 0;
 
     for (let m = 0; m < firstRoundMatchesCount; m++) {
-      if (m < realVsRealCount) {
+      if (m < byeTop) {
+        // Top BYEs
+        const teamA = teams[teamIndex] || null;
+        const teamB = null;
+        firstRoundPairs.push({ teamA, teamB });
+        teamIndex += 1;
+      } else if (m < firstRoundMatchesCount - byeBottom) {
+        // Middle Real matches
         const teamA = teams[teamIndex] || null;
         const teamB = teams[teamIndex + 1] || null;
         firstRoundPairs.push({ teamA, teamB });
         teamIndex += 2;
       } else {
+        // Bottom BYEs
         const teamA = teams[teamIndex] || null;
         const teamB = null;
         firstRoundPairs.push({ teamA, teamB });
